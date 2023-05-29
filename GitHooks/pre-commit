@@ -1,0 +1,32 @@
+#!/bin/sh
+# Get the project root directory
+cd "$(git rev-parse --show-toplevel)"
+
+res="$(ktlint --version)"
+if [[ "$?" -ne 0 ]]; then
+  printf "Please install klint \n"
+  exit 1
+fi
+
+STAGED=($(git diff --cached --name-only --diff-filter=ACM | grep ".kt$"))
+
+if [[ "$STAGED" = "" ]]; then
+  exit 0
+fi
+
+echo "Running Ktlint on ${#STAGED[@]} files"
+res=$(ktlint -F ${STAGED[@]})
+
+KOTLINT_EXIT="$?"
+echo "$res"
+
+git add "${STAGED[@]}"
+
+if [[ "${KOTLINT_EXIT}" == 0 ]]; then
+  printf "COMMIT SUCCEEDED\n"
+else
+  printf "COMMIT FAILED, FIX BUGS \n"
+  exit 1
+fi
+
+exit $?
